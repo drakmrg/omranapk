@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مدیریت ترم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050b08;
+    --panel:#0c1712;
+    --panel2:#10201a;
+    --line:#1c3a2d;
+    --line2:#2a5443;
+    --green:#10b981;
+    --green2:#6ee7b7;
+    --gold:#e0b84a;
+    --text:#e6f4ec;
+    --muted:#6f9a86;
+    --danger:#f87171;
+    --mono:"JetBrains Mono","Courier New",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:Vazirmatn,Tahoma,sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden;
+    background:radial-gradient(ellipse at 50% -10%,#0f3326 0%,var(--bg) 55%) fixed;
+  }
+  .num{font-family:var(--mono);letter-spacing:.3px;direction:ltr;display:inline-block}
+
+  /* ---------- شبکه‌ی نقشه‌ی مهندسی ---------- */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      linear-gradient(#10b98110 1px,transparent 1px),
+      linear-gradient(90deg,#10b98110 1px,transparent 1px),
+      linear-gradient(#10b98128 1px,transparent 1px),
+      linear-gradient(90deg,#10b98128 1px,transparent 1px);
+    background-size:24px 24px,24px 24px,120px 120px,120px 120px;
+    animation:grid 40s linear infinite;
+  }
+  @keyframes grid{to{background-position:240px 240px,240px 240px,0 0,0 0}}
+
+  /* ---------- هدر: بلوک عنوان نقشه ---------- */
+  header{position:relative;z-index:1;margin:12px 12px 0;border:1px solid var(--line2);border-radius:14px;
+    background:linear-gradient(180deg,#0c1d16,#08140f);overflow:hidden;box-shadow:0 12px 30px #000a}
+  .hd-top{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);
+    font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px}
+  .hd-main{display:flex;align-items:center;gap:12px;padding:16px 14px 14px}
+  .hd-icon{width:44px;height:44px;flex:none;border:1px solid var(--line2);border-radius:10px;display:grid;place-items:center;
+    background:#0a1712;color:var(--gold)}
+  .hd-icon svg{width:24px;height:24px}
+  .hd-main h1{margin:0;font-size:19px;font-weight:800}
+  .hd-main p{margin:3px 0 0;font-size:11px;color:var(--muted)}
+  .hazard{height:6px;background:repeating-linear-gradient(-45deg,var(--gold) 0 10px,#0b1712 10px 20px);
+    background-size:28px 28px;animation:hazard 1.2s linear infinite;opacity:.85}
+  @keyframes hazard{to{background-position:28px 0}}
+  .crane-anim{display:inline-block;transform-origin:50% 0;animation:sway 5s ease-in-out infinite}
+  @keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+
+  main{position:relative;z-index:1;padding:14px 12px 28px;max-width:620px;margin:auto}
+
+  /* ---------- منوی اصلی ---------- */
+  .home-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:2px 2px 10px;font-family:var(--mono)}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tile{position:relative;text-align:right;cursor:pointer;color:var(--text);font-family:inherit;
+    background:linear-gradient(170deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;
+    padding:14px 14px 12px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;
+    transition:transform .15s, border-color .2s, box-shadow .2s;animation:rise .6s cubic-bezier(.2,.8,.2,1) both;
+    clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+  .tile:hover{border-color:var(--line2);box-shadow:0 0 0 1px var(--green) inset,0 10px 26px #10b98122}
+  .tile:active{transform:scale(.97)}
+  .tile .idx{font-size:10px;color:var(--muted);font-family:var(--mono)}
+  .tile .ico{width:30px;height:30px;color:var(--green2)}
+  .tile .ico svg{width:30px;height:30px}
+  .tile b{display:block;font-size:14px;font-weight:600;margin-top:10px}
+  .tile small{display:block;font-size:11px;color:var(--gold);margin-top:3px;font-family:var(--mono);direction:ltr;text-align:right}
+  .tile:nth-child(1){animation-delay:0s}.tile:nth-child(2){animation-delay:.06s}
+  .tile:nth-child(3){animation-delay:.12s}.tile:nth-child(4){animation-delay:.18s}
+  .tile:nth-child(5){animation-delay:.24s}.tile:nth-child(6){animation-delay:.3s}
+
+  /* ---------- صفحه بخش‌ها ---------- */
+  .screen{display:none}
+  .screen.active{display:block;animation:fadeIn .35s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .backbar{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .backbar .sheet{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px}
+  .backbar h2{margin:0;font-size:16px;font-weight:600;flex:1;text-align:right}
+  .back{background:transparent;color:var(--green2);border:1px solid var(--line2);font-weight:600;padding:7px 12px;
+    display:inline-flex;align-items:center;gap:6px}
+  .back svg{width:14px;height:14px}
+
+  .card{position:relative;background:linear-gradient(170deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:14px;padding:16px 16px 14px;margin-bottom:12px;animation:rise .5s ease both}
+  .card::before{content:"";position:absolute;top:-1px;right:14px;width:46px;height:3px;background:var(--gold);border-radius:0 0 3px 3px}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .card h3{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--green2);display:flex;align-items:center;gap:8px}
+  .card h3 .tag{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line2);padding:1px 6px;border-radius:4px}
+  .card h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+  .course-head h3{margin:0;font-size:15px;color:var(--text)}
+  .course-head h3::after{display:none}
+
+  /* خط ابعاد */
+  .dim{position:relative;height:14px;margin:6px 0 10px;color:var(--muted);font-family:var(--mono);font-size:10px}
+  .dim::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line2)}
+  .dim::after{content:"";position:absolute;left:0;right:0;top:3px;bottom:3px;border-left:1px solid var(--line2);border-right:1px solid var(--line2)}
+  .dim span{position:absolute;left:50%;transform:translateX(-50%);top:-2px;background:var(--panel);padding:0 6px}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{background:#08140f;border:1px solid var(--line);border-radius:10px;padding:12px 6px;text-align:center}
+  .stat span{font-size:11px;color:var(--muted)}
+  .stat b{display:block;font-size:22px;margin-top:4px;color:var(--gold);font-family:var(--mono);font-weight:700}
+
+  .bar{height:8px;background:#08140f;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-top:12px}
+  .bar div,.mini-bar div{position:relative;height:100%;border-radius:4px;transition:width .6s ease;
+    background:linear-gradient(90deg,#059669,var(--green),var(--gold));overflow:hidden}
+  .bar div::after,.mini-bar div::after{content:"";position:absolute;inset:0;
+    background:repeating-linear-gradient(-45deg,#ffffff22 0 5px,transparent 5px 10px);background-size:20px 20px;animation:hazard 1s linear infinite}
+  .label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:8px}
+
+  input,select,textarea{width:100%;padding:10px 12px;margin:5px 0;border-radius:8px;border:1px solid var(--line);
+    background:#08140f;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border .2s, box-shadow .2s}
+  textarea{resize:vertical;min-height:70px}
+  select option{background:#08140f}
+  input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 2px #10b98122}
+  input::placeholder,textarea::placeholder{color:#3d6456}
+  input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);margin:0;flex:none}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+  button{background:var(--green);color:#03120c;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;
+    font-family:inherit;font-size:14px;transition:transform .1s, filter .2s}
+  button:hover{filter:brightness(1.1)}
+  button:active{transform:scale(.97)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--danger);border:1px solid #5b1c1c;padding:5px 9px;font-weight:400}
+  button.armed{background:#dc2626;color:#fff;border-color:#dc2626}
+  button.soft{background:transparent;color:var(--green2);border:1px dashed var(--line2);font-weight:400;width:100%;margin-top:8px}
+  button.add{width:100%;margin-top:6px;background:linear-gradient(135deg,#059669,var(--green))}
+  button.plus{padding:10px 14px;font-size:18px;line-height:1}
+
+  .course-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .hours-box{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#08140f;
+    border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin-top:12px;font-size:12px;color:var(--muted)}
+  .hours-box input{width:90px;margin:0;text-align:center;padding:6px;font-family:var(--mono)}
+  .sub{margin:14px 0 6px;font-size:12px;color:var(--green2);display:flex;justify-content:space-between;font-family:var(--mono)}
+  .mini-bar{height:4px;background:#08140f;border-radius:2px;overflow:hidden;margin-bottom:8px}
+  .mini-bar div{background:linear-gradient(90deg,var(--green),var(--gold))}
+  .task{display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:6px;background:#08140f;
+    border:1px solid var(--line);border-radius:8px}
+  .task span{flex:1;font-size:13px}
+  .done{text-decoration:line-through;color:#3d6456}
+  .add-task{display:flex;gap:8px;margin-top:10px}
+  .add-task input{margin:0}
+  .empty{font-size:12px;color:#3d6456;text-align:center;padding:10px 0;font-family:var(--mono)}
+  .small{font-size:11px;color:var(--muted)}
+
+  .slot{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;background:#08140f;
+    border:1px solid var(--line);border-right:2px solid var(--gold);border-radius:8px}
+  .slot .info{flex:1}
+  .slot .info b{display:block;font-size:13px}
+  .slot .info span{font-size:11px;color:var(--muted)}
+  .time-pill{background:#e0b84a1a;color:var(--gold);padding:3px 9px;border-radius:6px;font-size:12px;font-family:var(--mono);white-space:nowrap}
+
+  .score-wrap{position:relative;width:150px;height:150px;margin:8px auto 12px}
+  .score-wrap::before{content:"";position:absolute;inset:-10px;border-radius:50%;border:1px dashed #e0b84a55;animation:spin 20s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .score-ring{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:conic-gradient(var(--green) calc(var(--p)*1%), #08140f 0);position:relative;transition:background .8s ease}
+  .score-ring::before{content:"";position:absolute;inset:12px;border-radius:50%;background:var(--panel)}
+  .score-ring b{position:relative;font-size:30px;color:var(--gold);font-family:var(--mono)}
+  .breakdown{font-size:11px;color:var(--muted);line-height:2;text-align:center;font-family:var(--mono)}
+  .feedback{background:#08140f;border:1px dashed var(--line2);border-radius:8px;padding:12px;font-size:13px;line-height:1.9;margin-top:10px}
+  .log{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;margin-bottom:8px;background:#08140f;border:1px solid var(--line);border-radius:8px}
+  .log .info{flex:1;font-size:13px;line-height:1.7}
+  .log .info span{font-size:10px;color:var(--muted);font-family:var(--mono)}
+  .pts{background:#10b98118;color:var(--green2);padding:3px 8px;border-radius:6px;font-size:11px;font-family:var(--mono);white-space:nowrap}
+
+  .gpa-big{text-align:center;margin:4px 0 12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#08140f}
+  .gpa-big b{display:block;font-size:40px;color:var(--gold);font-family:var(--mono);font-weight:700;direction:ltr}
+  .gpa-big span{font-size:11px;color:var(--muted)}
+  .gpa-row{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;padding:8px 10px;margin-bottom:6px;
+    background:#08140f;border:1px solid var(--line);border-radius:8px}
+  .gpa-row .gpa-name{font-size:13px}
+  .gpa-row .gpa-name span{display:block;font-size:10px;color:var(--muted);font-family:var(--mono)}
+  .gpa-row input{margin:0;text-align:center;font-family:var(--mono)}
+  .proj{margin-top:14px;padding:12px;border-radius:10px;background:#08140f;border:1px dashed var(--line2)}
+  .proj h4{margin:0 0 6px;font-size:12px;color:var(--gold);font-weight:600}
+  .proj-out{font-size:12px;line-height:1.9;color:var(--muted);margin-top:8px;min-height:20px}
+  .proj-out b{color:var(--gold);font-family:var(--mono)}
+
+  /* ---------- بنر ---------- */
+  #banner{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-150%);width:calc(100% - 28px);
+    max-width:560px;z-index:99;background:#0b2a1f;border:1px solid var(--green);border-radius:10px;
+    padding:12px 14px;box-shadow:0 14px 40px #000c;display:flex;align-items:center;gap:10px;transition:transform .35s ease}
+  #banner.show{transform:translateX(-50%) translateY(0)}
+  #banner .msg{flex:1;font-size:13px;line-height:1.7}
+  #banner button{background:#ffffff18;color:#fff;padding:5px 10px;font-weight:400}
+
+  /* ---------- پیام انگیزشی ---------- */
+  #motive{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;
+    background:#02080a99;backdrop-filter:blur(4px);cursor:pointer}
+  #motive.show{display:flex;animation:fadeIn .3s ease both}
+  #motive .box{width:100%;max-width:340px;text-align:center;padding:22px 20px 18px;border-radius:14px;
+    background:linear-gradient(170deg,var(--panel2),var(--panel));border:1px solid var(--line2);box-shadow:0 20px 60px #000d;position:relative}
+  #motive .box::before{content:"";position:absolute;top:-1px;right:20px;width:60px;height:3px;background:var(--gold)}
+  .bricks{display:flex;justify-content:center;gap:6px;height:90px;align-items:flex-end;margin-bottom:10px}
+  .brick{width:52px;height:24px;border-radius:3px;background:linear-gradient(135deg,var(--gold),#a67c00);
+    box-shadow:inset 0 -3px 0 #00000040;opacity:0;animation:drop .8s cubic-bezier(.3,1.4,.6,1) forwards}
+  .brick:nth-child(1){animation-delay:.1s}.brick:nth-child(2){animation-delay:.35s}
+  .brick:nth-child(3){animation-delay:.6s}.brick:nth-child(4){animation-delay:.85s}
+  .brick:nth-child(2),.brick:nth-child(4){background:linear-gradient(135deg,var(--green),#047857)}
+  @keyframes drop{0%{opacity:0;transform:translateY(-70px) rotate(-8deg)}60%{opacity:1}100%{opacity:1;transform:none}}
+  #motive h4{margin:0 0 8px;font-size:15px;color:var(--gold);font-weight:700}
+  #motive p{margin:0;font-size:13px;line-height:1.9}
+  #motive .tap{margin-top:12px;font-size:10px;color:var(--muted);font-family:var(--mono)}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important}
+    .brick{opacity:1}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd-top"><span>PROJECT / TERM-01</span><span>SHEET 00</span></div>
+  <div class="hd-main">
+    <div class="hd-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <g class="crane-anim"><path d="M4 3h13M14 3v4M14 7l-1.5 6h3L14 7"/></g>
+        <path d="M9 3v18M3 21h18M9 9h-4"/>
+      </svg>
+    </div>
+    <div>
+      <h1>مدیریت ترم</h1>
+      <p>برنامه‌ریزی، مطالعه و پیشرفت تحصیلی</p>
+    </div>
+  </div>
+  <div class="hazard"></div>
+</header>
+
+<div id="banner"><div class="msg" id="bannerMsg"></div><button onclick="hideBanner()">بستن</button></div>
+
+<div id="motive" onclick="hideMotive()">
+  <div class="box">
+    <div class="bricks"><span class="brick"></span><span class="brick"></span><span class="brick"></span><span class="brick"></span></div>
+    <h4>کارگاه ادامه دارد</h4>
+    <p id="motiveText"></p>
+    <div class="tap">برای بستن لمس کنید</div>
+  </div>
+</div>
+
+<main>
+  <!-- منوی اصلی -->
+  <div id="home" class="screen active">
+    <div class="home-label"><span>INDEX</span><span>۶ بخش</span></div>
+    <div class="tiles">
+      <button class="tile" onclick="openScreen('summary')">
+        <span class="idx">01</span>
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>
+        <div><b>خلاصه ترم</b><small id="t-summary"></small></div>
+      </button>
+      <button class="tile" onclick="openScreen('courses')">
+        <span class="idx">02</span>
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h10a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M4 16a4 4 0 0 1 4-4h10"/></svg></span>
+        <div><b>دروس و چک‌لیست</b><small id="t-courses"></small></div>
+      </button>
+      <button class="tile" onclick="openScreen('gpa')">
+        <span class="idx">03</span>
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></span>
+        <div><b>تخمین معدل</b><small id="t-gpa"></small></div>
+      </button>
+      <button class="tile" onclick="openScreen('score')">
+        <span class="idx">04</span>
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
+        <div><b>امتیاز عملکرد</b><small id="t-score"></small></div>
+      </button>
+      <button class="tile" onclick="openScreen('log')">
+        <span class="idx">05</span>
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg></span>
+        <div><b>ثبت کار امروز</b><small id="t-log"></small></div>
+      </button>
+      <button class="tile" onclick="openScreen('schedule')">
+        <span class="idx">06</span>
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>
+        <div><b>برنامه مطالعاتی</b><small id="t-schedule"></small></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- خلاصه -->
+  <div id="scr-summary" class="screen">
+    <div class="backbar"><button class="back" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>بازگشت</button><h2>خلاصه ترم</h2><span class="sheet">01</span></div>
+    <div class="card">
+      <h3>شاخص‌های کلی <span class="tag">KPI</span></h3>
+      <div class="stats">
+        <div class="stat"><span>درس‌ها</span><b id="cCount">0</b></div>
+        <div class="stat"><span>ساعت مطالعه</span><b id="hours">0</b></div>
+        <div class="stat"><span>تکالیف</span><b id="taskPct">0%</b></div>
+      </div>
+      <div class="bar"><div id="taskBar" style="width:0%"></div></div>
+      <div class="label"><span>پیشرفت کل چک‌لیست‌ها</span><span class="num" id="taskCount">0 / 0</span></div>
+    </div>
+  </div>
+
+  <!-- دروس -->
+  <div id="scr-courses" class="screen">
+    <div class="backbar"><button class="back" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>بازگشت</button><h2>دروس و چک‌لیست</h2><span class="sheet">02</span></div>
+    <div class="card">
+      <h3>افزودن درس <span class="tag">NEW</span></h3>
+      <input id="name" placeholder="نام درس">
+      <input id="units" type="number" min="1" step="1" placeholder="تعداد واحد">
+      <button class="add" onclick="addCourse()">افزودن درس</button>
+    </div>
+    <div id="courses"></div>
+  </div>
+
+  <!-- تخمین معدل -->
+  <div id="scr-gpa" class="screen">
+    <div class="backbar"><button class="back" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>بازگشت</button><h2>تخمین معدل</h2><span class="sheet">03</span></div>
+    <div class="card">
+      <h3>معدل فعلی <span class="tag">GPA</span></h3>
+      <div class="gpa-big"><b id="gpaAvg">—</b><span id="gpaInfo">نمره‌ها را وارد کنید</span></div>
+      <div id="gpaList"></div>
+      <div class="proj">
+        <h4>شبیه‌سازی ترم بعد</h4>
+        <div class="grid3">
+          <input id="pUnits" type="number" min="0" step="1" placeholder="واحد">
+          <input id="pGrade" type="number" min="0" max="20" step="0.25" placeholder="نمره مورد انتظار">
+          <input id="pTarget" type="number" min="0" max="20" step="0.01" placeholder="معدل هدف">
+        </div>
+        <div class="proj-out" id="projOut">واحد و نمره یا معدل هدف را وارد کنید</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- امتیاز -->
+  <div id="scr-score" class="screen">
+    <div class="backbar"><button class="back" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>بازگشت</button><h2>امتیاز عملکرد</h2><span class="sheet">04</span></div>
+    <div class="card">
+      <h3>امتیاز کلی <span class="tag">SCORE</span></h3>
+      <div class="score-wrap"><div class="score-ring" id="ring" style="--p:0"><b id="scoreNum">0</b></div></div>
+      <div class="breakdown" id="breakdown"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="soft" onclick="copyReport()">کپی گزارش برای ارزیابی در هوش مصنوعی</button>
+    </div>
+  </div>
+
+  <!-- ثبت کار -->
+  <div id="scr-log" class="screen">
+    <div class="backbar"><button class="back" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>بازگشت</button><h2>ثبت کار امروز</h2><span class="sheet">05</span></div>
+    <div class="card">
+      <h3>گزارش کار <span class="tag">LOG</span></h3>
+      <select id="lCourse"></select>
+      <div class="grid2">
+        <input id="lMinutes" type="number" min="1" step="5" placeholder="مدت (دقیقه)">
+        <input id="lDate" type="date">
+      </div>
+      <textarea id="lNote" placeholder="چه کاری انجام دادی؟ (مثلاً: حل ۲۰ تمرین فصل ۳ و مرور جزوه)"></textarea>
+      <button class="add" onclick="addLog()">ثبت و امتیاز بگیر</button>
+      <div id="logs" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- برنامه مطالعاتی -->
+  <div id="scr-schedule" class="screen">
+    <div class="backbar"><button class="back" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>بازگشت</button><h2>برنامه مطالعاتی</h2><span class="sheet">06</span></div>
+    <div class="card">
+      <h3>زمان‌بندی <span class="tag">PLAN</span></h3>
+      <div class="grid2">
+        <select id="sDay"></select>
+        <input id="sTime" type="time">
+      </div>
+      <div class="grid2">
+        <select id="sCourse"></select>
+        <select id="sLead">
+          <option value="0">همان لحظه</option>
+          <option value="5">۵ دقیقه قبل</option>
+          <option value="10">۱۰ دقیقه قبل</option>
+          <option value="15">۱۵ دقیقه قبل</option>
+        </select>
+      </div>
+      <button class="add" onclick="addSchedule()">افزودن به برنامه</button>
+      <button class="soft" id="notifBtn" onclick="askNotif()">فعال‌سازی اعلان گوشی</button>
+      <div class="small" style="margin-top:10px">یادآوری‌ها وقتی فعال‌اند که این صفحه در مرورگر باز باشد.</div>
+      <div id="slots" style="margin-top:12px"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const DAYS = ['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه'];
+const HOUR_TARGET = 30;
+const WEEK_DAYS = 7;
+const MOTIVES = [
+  'هر ساختمان بزرگ با یک آجر شروع شد. امروز آجر خودت را گذاشتی.',
+  'پایه‌های محکم، آینده‌ای استوار می‌سازد. ادامه بده.',
+  'نقشه‌ات روشن است؛ فقط کافی است هر روز یک ستون دیگر بالا ببری.',
+  'هیچ سازه‌ای یک‌شبه ساخته نشده. کارگاهت همین حالا در حال کار است.',
+  'هر ساعت مطالعه یک طبقه به ساختمان موفقیتت اضافه می‌کند.',
+  'هر تکلیف انجام‌شده، یک ستون محکم‌تر برای ترمت است.',
+  'سختی مثل بتن است؛ هرچه بیشتر فشار ببیند، محکم‌تر می‌شود.',
+  'فردا صبح کارگاه دوباره باز است. با یک کار کوچک شروع کن.'
+];
+
+let courses = [], schedule = [], notified = [], logs = [];
+let currentScreen = null;
+
+function load(key, def){ try { return JSON.parse(localStorage.getItem(key)) || def; } catch(e){ return def; } }
+function store(key, val){ try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
+function saveAll(){ store('courses', courses); store('schedule', schedule); store('logs', logs); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function find(id){ return courses.find(c => c.id === id); }
+function todayISO(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+courses = load('courses', []);
+schedule = load('schedule', []);
+notified = load('notified', []);
+logs = load('logs', []);
+
+/* ---------- ناوبری (بدون هش و بدون تاریخچه مرورگر) ---------- */
+const SCREENS = ['summary','courses','gpa','score','log','schedule'];
+
+function showScreen(name){
+  const prev = currentScreen;
+  currentScreen = name;
+  document.getElementById('home').classList.toggle('active', !name);
+  SCREENS.forEach(s => document.getElementById('scr-' + s).classList.toggle('active', s === name));
+  window.scrollTo(0, 0);
+  if(prev && !name) showMotive();
+}
+function openScreen(name){ showScreen(SCREENS.includes(name) ? name : null); }
+function goHome(){ showScreen(null); }
+
+/* ---------- پیام انگیزشی ---------- */
+let motiveTimer = null;
+function showMotive(){
+  document.getElementById('motiveText').textContent = MOTIVES[Math.floor(Math.random() * MOTIVES.length)];
+  document.getElementById('motive').classList.add('show');
+  clearTimeout(motiveTimer);
+  motiveTimer = setTimeout(hideMotive, 4500);
+}
+function hideMotive(){ document.getElementById('motive').classList.remove('show'); }
+
+/* ---------- درس‌ها ---------- */
+function addCourse(){
+  const name = document.getElementById('name').value.trim();
+  if(!name) return;
+  courses.push({ id: Date.now(), name, units: parseFloat(document.getElementById('units').value) || 1, grade: null, hours: 0, tasks: [] });
+  document.getElementById('name').value = '';
+  document.getElementById('units').value = '';
+  saveAll(); render();
+}
+function delCourse(id){
+  courses = courses.filter(c => c.id !== id);
+  schedule = schedule.filter(s => s.cid !== id);
+  logs = logs.filter(l => l.cid !== id);
+  saveAll(); render();
+}
+function updateField(id, field, val){ const c = find(id); if(c){ c[field] = val; saveAll(); render(); } }
+function addTask(id){
+  const inp = document.getElementById('ti' + id);
+  const txt = inp.value.trim();
+  if(!txt) return;
+  find(id).tasks.push({ t: txt, done: false });
+  saveAll(); render();
+}
+function toggleTask(id, i){ const t = find(id).tasks[i]; t.done = !t.done; saveAll(); render(); }
+function delTask(id, i){ find(id).tasks.splice(i, 1); saveAll(); render(); }
+
+function tapDel(btn, fn){
+  if(btn.dataset.armed === '1'){ fn(); return; }
+  btn.dataset.armed = '1';
+  btn.classList.add('armed');
+  btn.textContent = 'مطمئنی؟';
+  setTimeout(() => {
+    if(btn.isConnected){
+      btn.dataset.armed = '';
+      btn.classList.remove('armed');
+      btn.textContent = btn.dataset.label || '×';
+    }
+  }, 3000);
+}
+
+/* ---------- تخمین معدل ---------- */
+function setGrade(id, raw){
+  const c = find(id);
+  if(!c) return;
+  const v = parseFloat(raw);
+  c.grade = (isNaN(v) || v < 0 || v > 20) ? null : v;
+  saveAll(); render();
+}
+
+function gpaData(){
+  const graded = courses.filter(c => c.grade !== null && c.grade !== undefined);
+  const units = graded.reduce((s,c) => s + c.units, 0);
+  const wsum = graded.reduce((s,c) => s + c.grade * c.units, 0);
+  return { count: graded.length, units, wsum, avg: units ? wsum / units : 0 };
+}
+
+function renderGPA(){
+  const list = document.getElementById('gpaList');
+  list.innerHTML = courses.length
+    ? courses.map(c => `
+      <div class="gpa-row">
+        <div class="gpa-name">${esc(c.name)}<span>${c.units} واحد</span></div>
+        <input type="number" min="0" max="20" step="0.25" placeholder="نمره از ۲۰"
+          value="${c.grade ?? ''}" onchange="setGrade(${c.id}, this.value)">
+      </div>`).join('')
+    : '<div class="empty">اول چند درس اضافه کنید</div>';
+
+  const g = gpaData();
+  const totalUnits = courses.reduce((s,c) => s + c.units, 0);
+  document.getElementById('gpaAvg').textContent = g.count ? g.avg.toFixed(2) : '—';
+  document.getElementById('gpaInfo').textContent = g.count
+    ? `معدل فعلی از ۲۰ · ${g.units} واحد نمره‌دار از ${totalUnits} واحد`
+    : 'نمره‌ها را وارد کنید';
+  renderProjection(g);
+}
+
+function renderProjection(g){
+  const out = document.getElementById('projOut');
+  const pu = parseFloat(document.getElementById('pUnits').value);
+  const pg = parseFloat(document.getElementById('pGrade').value);
+  const tg = parseFloat(document.getElementById('pTarget').value);
+  const U = g.units, W = g.wsum;
+  const lines = [];
+  if(pu > 0 && !isNaN(pg) && pg >= 0 && pg <= 20){
+    const newAvg = (W + pu * pg) / (U + pu);
+    lines.push(`معدل با نمره ${pg} در ${pu} واحد: <b>${newAvg.toFixed(2)}</b>`);
+  }
+  if(pu > 0 && !isNaN(tg) && tg > 0){
+    const need = (tg * (U + pu) - W) / pu;
+    if(need > 20) lines.push(`برای رسیدن به ${tg} حتی با نمره ۲۰ هم نمی‌رسید`);
+    else if(need <= 0) lines.push(`معدل ${tg} با هر نمره‌ای در این واحدها محقق است`);
+    else lines.push(`برای رسیدن به معدل ${tg} باید حداقل <b>${need.toFixed(2)}</b> بگیرید`);
+  }
+  out.innerHTML = lines.length ? lines.join('<br>') : 'واحد و نمره یا معدل هدف را وارد کنید';
+}
+
+/* ---------- ثبت کار و امتیاز ---------- */
+function entryPoints(l){
+  const timePts = Math.min(l.minutes / 90, 1) * 70;
+  const notePts = l.note.trim().length >= 20 ? 30 : 10;
+  return Math.round(timePts + notePts);
+}
+
+function addLog(){
+  const cid = Number(document.getElementById('lCourse').value);
+  const minutes = parseFloat(document.getElementById('lMinutes').value);
+  const note = document.getElementById('lNote').value;
+  const date = document.getElementById('lDate').value || todayISO();
+  if(!cid || !find(cid) || !minutes || minutes <= 0 || !note.trim()){
+    showBanner('درس، مدت و توضیح کار را وارد کنید');
+    return;
+  }
+  const entry = { id: Date.now(), cid, minutes, note: note.trim(), date };
+  logs.push(entry);
+  const c = find(cid);
+  c.hours = Math.round(((c.hours || 0) + minutes / 60) * 100) / 100;
+  document.getElementById('lMinutes').value = '';
+  document.getElementById('lNote').value = '';
+  saveAll(); render();
+  showBanner('امتیاز این کار: ' + entryPoints(entry) + ' از ۱۰۰');
+}
+function delLog(id){
+  const l = logs.find(x => x.id === id);
+  if(l){ const c = find(l.cid); if(c) c.hours = Math.max(0, Math.round(((c.hours||0) - l.minutes/60) * 100) / 100); }
+  logs = logs.filter(x => x.id !== id);
+  saveAll(); render();
+}
+
+function overallScore(){
+  const totalHours = courses.reduce((s,c) => s + (c.hours || 0), 0);
+  const allTasks = courses.flatMap(c => c.tasks);
+  const doneTasks = allTasks.filter(t => t.done).length;
+  const hoursPts = Math.min(totalHours / HOUR_TARGET, 1) * 40;
+  const tasksPts = allTasks.length ? (doneTasks / allTasks.length) * 40 : 0;
+  const activeDays = new Set(logs.map(l => l.date)).size;
+  const consistencyPts = Math.min(activeDays / WEEK_DAYS, 1) * 20;
+  const total = Math.round(hoursPts + tasksPts + consistencyPts);
+  return { total, hoursPts: Math.round(hoursPts), tasksPts: Math.round(tasksPts), consistencyPts: Math.round(consistencyPts),
+           totalHours, doneTasks, allCount: allTasks.length, activeDays };
+}
+
+function feedbackText(s){
+  const tips = [];
+  if(s.totalHours < HOUR_TARGET) tips.push(`برای امتیاز کامل ساعت مطالعه، حدود ${Math.ceil(HOUR_TARGET - s.totalHours)} ساعت دیگر لازم است.`);
+  if(s.allCount && s.doneTasks < s.allCount) tips.push(`${s.allCount - s.doneTasks} تکلیف مانده؛ با یکی‌یکی تمام کردن، امتیاز بالا می‌رود.`);
+  if(s.activeDays < WEEK_DAYS) tips.push(`سعی کنید هر روز حداقل کمی مطالعه کنید؛ تا الان ${s.activeDays} روز فعال بوده‌اید.`);
+  let head;
+  if(s.total >= 80) head = 'عملکرد عالی است. ادامه بده.';
+  else if(s.total >= 50) head = 'مسیر خوبی داری؛ با کمی فشار بیشتر به سطح عالی می‌رسی.';
+  else head = 'هنوز اول راهی؛ از امروز با یک کار کوچک شروع کن.';
+  return head + (tips.length ? '<br>' + tips.join('<br>') : '');
+}
+
+function renderScore(){
+  const s = overallScore();
+  document.getElementById('ring').style.setProperty('--p', s.total);
+  document.getElementById('scoreNum').textContent = s.total;
+  document.getElementById('breakdown').innerHTML =
+    `ساعت: ${s.hoursPts}/40 · تکالیف: ${s.tasksPts}/40 · استمرار: ${s.consistencyPts}/20`;
+  document.getElementById('feedback').innerHTML = feedbackText(s);
+}
+
+function reportText(){
+  const s = overallScore();
+  const g = gpaData();
+  const lines = [
+    'گزارش ترم',
+    `امتیاز کلی: ${s.total} از ۱۰۰`,
+    `معدل فعلی: ${g.count ? g.avg.toFixed(2) + ' از ۲۰' : 'ثبت نشده'}`,
+    `ساعت مطالعه: ${s.totalHours} ساعت`,
+    `تکالیف انجام‌شده: ${s.doneTasks} از ${s.allCount}`,
+    `روزهای فعال در ۷ روز اخیر: ${s.activeDays}`,
+    '',
+    'دروس:'
+  ];
+  courses.forEach(c => {
+    const d = c.tasks.filter(t => t.done).length;
+    const gr = (c.grade !== null && c.grade !== undefined) ? c.grade : 'بدون نمره';
+    lines.push(`- ${c.name} (${c.units} واحد، نمره ${gr}): ${c.hours} ساعت، تکالیف ${d}/${c.tasks.length}`);
+  });
+  if(logs.length){
+    lines.push('', 'کارهای ثبت‌شده:');
+    logs.slice(-15).forEach(l => {
+      const c = find(l.cid);
+      lines.push(`- ${l.date} | ${c ? c.name : ''} | ${l.minutes} دقیقه | ${l.note}`);
+    });
+  }
+  lines.push('', 'لطفاً عملکرد من را ارزیابی کن و پیشنهادهای مشخص بده.');
+  return lines.join('\n');
+}
+
+function copyReport(){
+  const text = reportText();
+  const done = () => showBanner('گزارش کپی شد؛ آن را در Claude یا هر هوش مصنوعی دیگری جای‌گذاری کنید');
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch(e){ showBanner('کپی انجام نشد؛ متن را دستی انتخاب کنید'); }
+    ta.remove();
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, fallback);
+  } else fallback();
+}
+
+/* ---------- برنامه مطالعاتی ---------- */
+function addSchedule(){
+  const time = document.getElementById('sTime').value;
+  const cid = Number(document.getElementById('sCourse').value);
+  const day = Number(document.getElementById('sDay').value);
+  const lead = Number(document.getElementById('sLead').value);
+  if(!time || !cid || !find(cid)) return;
+  schedule.push({ id: Date.now(), day, time, cid, lead });
+  document.getElementById('sTime').value = '';
+  saveAll(); render();
+}
+function delSchedule(id){ schedule = schedule.filter(s => s.id !== id); saveAll(); render(); }
+
+function renderSchedule(){
+  const sorted = [...schedule].sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
+  const el = document.getElementById('slots');
+  if(!sorted.length){ el.innerHTML = '<div class="empty">هنوز برنامه‌ای ثبت نشده</div>'; return; }
+  el.innerHTML = sorted.map(s => {
+    const c = find(s.cid);
+    const name = c ? esc(c.name) : 'درس حذف‌شده';
+    const leadTxt = s.lead ? ` · ${s.lead} دقیقه قبل` : '';
+    return `
+    <div class="slot">
+      <div class="info"><b>${name}</b><span>${DAYS[s.day]}${leadTxt}</span></div>
+      <div class="time-pill">${s.time}</div>
+      <button class="ghost" data-label="×" onclick="tapDel(this, () => delSchedule(${s.id}))">×</button>
+    </div>`;
+  }).join('');
+}
+
+function persianDayIndex(d){ return (d.getDay() + 1) % 7; }
+
+function showBanner(msg){
+  document.getElementById('bannerMsg').textContent = msg;
+  document.getElementById('banner').classList.add('show');
+  clearTimeout(showBanner.t);
+  showBanner.t = setTimeout(hideBanner, 15000);
+}
+function hideBanner(){ document.getElementById('banner').classList.remove('show'); }
+
+function fire(s){
+  const c = find(s.cid);
+  const name = c ? c.name : 'درس';
+  const msg = s.lead ? `${s.lead} دقیقه دیگر ساعت مطالعه ${name} است` : `وقت مطالعه ${name} است`;
+  showBanner(msg);
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  if('Notification' in window && Notification.permission === 'granted'){
+    try { new Notification('مدیریت ترم', { body: msg }); } catch(e){}
+  }
+}
+
+function checkReminders(){
+  const now = new Date();
+  const today = persianDayIndex(now);
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const dateKey = now.toDateString();
+  schedule.forEach(s => {
+    if(s.day !== today) return;
+    const [h, m] = s.time.split(':').map(Number);
+    const trig = h * 60 + m - (s.lead || 0);
+    if(nowMin >= trig && nowMin <= trig + 1){
+      const key = s.id + '|' + dateKey + '|' + trig;
+      if(notified.includes(key)) return;
+      notified.push(key);
+      notified = notified.slice(-200);
+      store('notified', notified);
+      fire(s);
+    }
+  });
+}
+
+function askNotif(){
+  if(!('Notification' in window)){ showBanner('این مرورگر از اعلان پشتیبانی نمی‌کند'); return; }
+  Notification.requestPermission().then(p => {
+    showBanner(p === 'granted' ? 'اعلان‌ها فعال شد' : 'اجازه اعلان داده نشد؛ یادآوری داخل صفحه نشان داده می‌شود');
+    updateNotifBtn();
+  });
+}
+function updateNotifBtn(){
+  const b = document.getElementById('notifBtn');
+  if(!('Notification' in window)){ b.disabled = true; b.textContent = 'اعلان در این مرورگر پشتیبانی نمی‌شود'; return; }
+  if(Notification.permission === 'granted') b.textContent = 'اعلان گوشی فعال است';
+}
+
+/* ---------- نمایش ---------- */
+function populateForms(){
+  const dSel = document.getElementById('sDay');
+  if(!dSel.options.length) dSel.innerHTML = DAYS.map((d,i) => `<option value="${i}">${d}</option>`).join('');
+
+  ['sCourse','lCourse'].forEach(id => {
+    const sel = document.getElementById(id);
+    const keep = sel.value;
+    sel.innerHTML = courses.length
+      ? courses.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')
+      : '<option value="">اول یک درس اضافه کنید</option>';
+    if(keep && find(Number(keep))) sel.value = keep;
+  });
+
+  const dateEl = document.getElementById('lDate');
+  if(!dateEl.value) dateEl.value = todayISO();
+}
+
+function renderLogs(){
+  const el = document.getElementById('logs');
+  if(!logs.length){ el.innerHTML = '<div class="empty">هنوز کاری ثبت نشده</div>'; return; }
+  el.innerHTML = [...logs].reverse().slice(0, 20).map(l => {
+    const c = find(l.cid);
+    return `
+    <div class="log">
+      <div class="info">
+        <b>${c ? esc(c.name) : 'درس حذف‌شده'}</b> · ${l.minutes} دقیقه<br>
+        ${esc(l.note)}<br><span>${l.date}</span>
+      </div>
+      <div class="pts">${entryPoints(l)} امتیاز</div>
+      <button class="ghost" data-label="×" onclick="tapDel(this, () => delLog(${l.id}))">×</button>
+    </div>`;
+  }).join('');
+}
+
+function renderTiles(){
+  const allTasks = courses.flatMap(c => c.tasks);
+  const doneCount = allTasks.filter(t => t.done).length;
+  const g = gpaData();
+  const s = overallScore();
+  document.getElementById('t-summary').textContent = `${courses.length} درس`;
+  document.getElementById('t-courses').textContent = `${allTasks.length - doneCount} تکلیف باز`;
+  document.getElementById('t-gpa').textContent = g.count ? `معدل ${g.avg.toFixed(2)}` : 'نمره وارد کنید';
+  document.getElementById('t-score').textContent = `امتیاز ${s.total} / ۱۰۰`;
+  document.getElementById('t-log').textContent = `${logs.length} کار ثبت‌شده`;
+  document.getElementById('t-schedule').textContent = `${schedule.length} برنامه`;
+}
+
+function render(){
+  const hours = courses.reduce((s,c) => s + (c.hours || 0), 0);
+  const allTasks = courses.flatMap(c => c.tasks);
+  const doneCount = allTasks.filter(t => t.done).length;
+  const taskPct = allTasks.length ? doneCount / allTasks.length * 100 : 0;
+
+  document.getElementById('cCount').textContent = courses.length;
+  document.getElementById('hours').textContent = Math.round(hours * 100) / 100;
+  document.getElementById('taskPct').textContent = taskPct.toFixed(0) + '%';
+  document.getElementById('taskBar').style.width = taskPct + '%';
+  document.getElementById('taskCount').textContent = doneCount + ' / ' + allTasks.length;
+
+  populateForms();
+  renderSchedule();
+  renderLogs();
+  renderScore();
+  renderGPA();
+  renderTiles();
+
+  document.getElementById('courses').innerHTML = courses.map(c => {
+    const done = c.tasks.filter(t => t.done).length;
+    const pct = c.tasks.length ? (done / c.tasks.length * 100) : 0;
+    return `
+    <div class="card">
+      <div class="course-head">
+        <h3>${esc(c.name)}</h3>
+        <button class="ghost" data-label="حذف" onclick="tapDel(this, () => delCourse(${c.id}))">حذف</button>
+      </div>
+      <div class="small" style="margin-top:4px">واحد: <span class="num">${c.units}</span>${(c.grade !== null && c.grade !== undefined) ? ' · نمره: <span class="num">' + c.grade + '</span>' : ''}</div>
+
+      <div class="hours-box">
+        <span>ساعت مطالعه (کل)</span>
+        <input type="number" min="0" step="0.5" value="${c.hours}"
+          onchange="updateField(${c.id},'hours',parseFloat(this.value)||0)">
+      </div>
+
+      <div class="sub"><span>چک‌لیست</span><span>${done}/${c.tasks.length} · ${pct.toFixed(0)}%</span></div>
+      <div class="mini-bar"><div style="width:${pct}%"></div></div>
+
+      ${c.tasks.length ? c.tasks.map((t,i) => `
+        <div class="task">
+          <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${c.id},${i})">
+          <span class="${t.done?'done':''}">${esc(t.t)}</span>
+          <button class="ghost" data-label="×" onclick="tapDel(this, () => delTask(${c.id},${i}))">×</button>
+        </div>`).join('') : '<div class="empty">هنوز تکلیفی ثبت نشده</div>'}
+
+      <div class="add-task">
+        <input id="ti${c.id}" placeholder="تکلیف یا کار جدید...">
+        <button class="plus" onclick="addTask(${c.id})">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+['pUnits','pGrade','pTarget'].forEach(id =>
+  document.getElementById(id).addEventListener('input', () => renderProjection(gpaData())));
+
+render();
+updateNotifBtn();
+setInterval(checkReminders, 15000);
+checkReminders();
+</script>
+</body>
+</html>
